@@ -21,7 +21,7 @@ _init_dirtree () {
         chmod -R 755  $path
     done
     mkdir /tmp/redis_temp
-    [[ $? -eq 0 ]] && green_echo "\tINFO\t $paths等目录创建完成！"
+    [[ $? -eq 0 ]] && green_echo "\tINFO\t ${paths[@]}等目录创建完成！"
 }
 
 _chmod_dirtree () {
@@ -30,7 +30,7 @@ _chmod_dirtree () {
     for path in ${paths[@]}; do
         chmod -R 755  $path
     done
-    [[ $? -eq 0 ]] && green_echo "\tINFO\t $paths等目录属性修改完成！"
+    [[ $? -eq 0 ]] && green_echo "\tINFO\t ${paths[@]}等目录属性修改完成！"
 }
 
 _render_tpl () {
@@ -50,7 +50,7 @@ get_install_pkgs () {
     else
          yum -y install subversion
 
-        if [[ -f $RESP_PATH/$REDIS_PKGS ]]; then
+        if [[ -f $RESP_PATH/$pkgs_name ]]; then
             green_echo "\tINFO\t 安装文件已存在，无需下载！ \n"
         else
             svn co --username=${SVN_USER} --password=${SVN_PASSWD}  --force --no-auth-cache \
@@ -84,8 +84,8 @@ make_source_code () {
 
 add_profile () {
 
-    grep "PATH=\$PATH:$INSTALL_PATH/bin"  /etc/profile > /dev/null 2>&1 || echo "PATH=\$PATH:$INSTALL_PATH/bin" >> /etc/profile
-    grep 'export PATH'  /etc/profile > /dev/null 2>&1 || echo "export PATH" >> /etc/profile
+    grep "^PATH=\$PATH:$INSTALL_PATH/bin$"  /etc/profile > /dev/null 2>&1 || echo "PATH=\$PATH:$INSTALL_PATH/bin" >> /etc/profile
+    grep '^export PATH$'  /etc/profile > /dev/null 2>&1 || echo "export PATH" >> /etc/profile
 
     [[ $? -eq 0 ]] && green_echo "\tINFO\t Redis用户环境变量添加完成完成！"
 }
@@ -116,6 +116,8 @@ init_redis () {
 
     rm -rf /tmp/redis_temp
 }
+
+_init_params () {
 
 params=$(echo $@ | sed 's\{\\g' | sed 's\}\\g' )
 
@@ -153,17 +155,17 @@ if [[ "$num" -eq 11 ]]; then
 
             skip_download_files) SKIP_DOWNLOAD_FILES=$value ;;
 
-            *) red_echo "\tERROR\t 接收到未知参数key = $key\n"
-                exit 1
-                ;;
+            *) red_echo "\tERROR\t 接收到未知参数key = $key\n" ;;
         esac
     done    
 else
     red_echo "\tERROR\t参数个数错误, 当前参数为 = $@！\n"
-    exit 1
 fi
 
 IFS=$old_ifs
+}
+
+_init_params $@
 
 install_dependences
 
